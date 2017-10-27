@@ -137,9 +137,6 @@ if exists("loaded_closetag")
 endif
 let loaded_closetag=1
 
-" set up mappings for tag closing
-inoremap </ <C-R>=GetCloseTag()<CR>
-map <C-_> a<C-_><ESC>
 
 "------------------------------------------------------------------------------
 " Tag closer - uses the stringstack implementation below
@@ -223,23 +220,6 @@ function! GetLastOpenTag(unaryTagsStack)
     return ""
 endfunction
 
-" Returns closing tag for most recent unclosed tag, respecting the
-" current setting of b:unaryTagsStack for tags that should not be closed
-function! GetCloseTag()
-  if !exists("b:unaryTagsStack") || exists("b:closetag_html_style")
-      if &filetype == "html" || exists("b:closetag_html_style")
-    let b:unaryTagsStack="area base br dd dt hr img input link meta param"
-      else " for xsl and xsl
-    let b:unaryTagsStack=""
-      endif
-  endif
-    let tag=GetLastOpenTag("b:unaryTagsStack")
-    if tag == ""
-	return ""
-    else
-	return "</".tag.">"
-    endif
-endfunction
 
 " return 1 if the cursor is in a syntactically identified comment field
 " (fails for empty lines: always returns not-in-comment)
@@ -333,35 +313,37 @@ function! s:Clearstack(sname)
     exe "let ".a:sname."=''"
 endfunction
 
-    """""""""""""""     add by kenshin      """"""""""""""""
-    "to store cursor Position
-    let s:cursorPos = 0
-    "support </ close tag
-    function! EasyCloseTag()
-        let line = getline(".")
-        let length = strlen(line)
-        let lastChar = strpart(line,length - 1)
-        if lastChar == "<"
-            let tag = GetLastOpenTag("b:unaryTagsStack")
-            if tag == ""
-                return ""
-            else
-                let s:cursorPos = col(".") - 1
-                return "/".tag.">"
-            endif
-        else
-            return "/"
-    endfunction
+"""""""""""""""     add by kenshin      """"""""""""""""
+"to store cursor Position
+let s:cursorPos = 0
+"support </ close tag
+function! EasyCloseTag()
+    let line = getline(".")
+    let length = strlen(line)
+    let lastChar = strpart(line,length - 1)
+    if lastChar == "<"
+	let tag = GetLastOpenTag("b:unaryTagsStack")
+	if tag == ""
+	    return ""
+	else
+	    let s:cursorPos = col(".") - 1
+	    return "/".tag.">"
+	endif
+    else
+	return "/"
+endfunction
 
-    "set cursor to <tag>#cursor#</tag>
-    function! SetCursor()
-        if s:cursorPos != 0
-            let lineNum = line(".")
-            call cursor(lineNum, s:cursorPos)
-            let s:cursorPos = 0
-        endif
-        return ""
-    endfunction
+"set cursor to <tag>#cursor#</tag>
+function! SetCursor()
+    if s:cursorPos != 0
+	let lineNum = line(".")
+	call cursor(lineNum, s:cursorPos)
+	let s:cursorPos = 0
+    endif
+    return ""
+endfunction
 
-    "set up key '/' to trigger closeTag and setCursor function
-    inoremap <C+/> <C-R>=EasyCloseTag()<CR><C-R>=SetCursor()<CR>
+"set up key '/' to trigger closeTag and setCursor function
+au filetype html,htm inoremap <buffer> <silent> / <C-R>=EasyCloseTag()<CR><C-R>=SetCursor()<CR>
+
+" vim: set ts=4 sw=4 tw=78 noet :
