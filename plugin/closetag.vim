@@ -344,6 +344,6 @@ function! SetCursor()
 endfunction
 
 "set up key '/' to trigger closeTag and setCursor function
-au filetype html,htm inoremap <buffer> <silent> / <C-R>=EasyCloseTag()<CR><C-R>=SetCursor()<CR>
+au filetype html,htm inoremap <buffer> <silent> / <C-R>=EasyCloseTag()<CR>
 
 " vim: set ts=4 sw=4 tw=78 noet :
